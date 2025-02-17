@@ -24,5 +24,3 @@ Route::get('/mail/table', [DataController::class, 'mail_table'])->name('mail.tab
 Route::get('/sample-csv', [DataController::class, 'sample_csv'])->name('sample.csv');
 Route::post('/import-csv', [DataController::class, 'import_csv'])->name('import.csv');
 
-
-
