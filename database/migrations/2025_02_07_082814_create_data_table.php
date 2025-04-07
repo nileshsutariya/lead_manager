@@ -13,16 +13,20 @@ return new class extends Migration
     {
         Schema::create('data', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->string('phone_no');
-            $table->string('email');
-            $table->string('address');
-            $table->string('city');
-            $table->string('state');
-            $table->string('country');
-            $table->string('pincode');
-            $table->string('company_name');
-            $table->string('designation');
+            $table->string('name')->nullable();
+            $table->string('phone_no')->nullable()->unique();
+            $table->string('email')->nullable()->unique();
+            $table->string('address')->nullable();
+            $table->string('city')->nullable();
+            $table->string('state')->nullable();
+            $table->string('country')->nullable();
+            $table->string('pincode')->nullable();
+            $table->string('company_name')->nullable();
+            $table->string('reference')->nullable();
+            $table->string('company_type')->nullable();
+            $table->json('categories')->nullable();
+            $table->boolean('status')->default(0);
+            $table->boolean('is_subscribed')->default(true);
             $table->timestamps();
         });
     }

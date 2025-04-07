@@ -29,7 +29,6 @@
     <link rel="stylesheet" href="{{ asset('plugins/summernote/summernote-bs4.min.css') }}">
     <script src="{{ asset('plugins/jquery/jquery.min.js') }}"></script>
     <script src="{{ asset('plugins/select2/js/select2.full.min.js') }}"></script>
-    <link rel="stylesheet" href="{{ asset('plugins/fontawesome-free/css/all.min.css') }}">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-beta.1/css/select2.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="{{ asset('plugins/select2/css/select2.min.css') }}">
     <link rel="stylesheet" href="{{ asset('plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css') }}">
@@ -42,6 +41,16 @@
     <link rel="stylesheet" href="{{ asset('plugins/datatables-buttons/css/buttons.bootstrap4.min.css') }}">
     {{-- <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"> --}}
     <link href="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote.min.css" rel="stylesheet">
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="{{ asset('plugins/fontawesome-free/css/all.min.css') }}">
+    <!-- DataTables -->
+    <link rel="stylesheet" href="{{ asset('plugins/datatables-bs4/css/dataTables.bootstrap4.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('plugins/datatables-responsive/css/responsive.bootstrap4.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('plugins/datatables-buttons/css/buttons.bootstrap4.min.css') }}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/summernote/0.8.18/summernote-lite.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@yaireo/tagify/dist/tagify.css">
 
 <body class="hold-transition sidebar-mini layout-fixed">
     <div class="wrapper">
@@ -88,54 +97,30 @@
         <aside class="main-sidebar sidebar-dark-primary elevation-4">
             <!-- Brand Logo -->
             <a class="brand-link">
-                <h5 class="brand-text font-weight-bold text-center">Lead Manager</h5>
+                <h5 class="brand-text font-weight-bold text-center">Data Center</h5>
             </a>
-
             <!-- Sidebar -->
             <div class="sidebar">
                 <!-- Sidebar Menu -->
                 <nav class="mt-2">
                     <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu"
                         data-accordion="true">
-
-                        <!-- Dashboard -->
                         <li class="nav-item">
-                            <a href="" class="nav-link">
-                                <i class="nav-icon fas fa-chart-pie"></i>
-                                <p class="text-bold" style="font-size: 16px">
-                                    Dashboard
-                                </p>
-                            </a>
-                        </li>
-
-                        {{-- Data master --}}
-                        {{-- <li class="nav-item">
-                            <a href="{{ route('data') }}" class="nav-link ">
-                                <i class=" nav-icon fa fa-user icon"></i>
-                                <p class="text-bold" style="font-size: 16px">
-                                    Users Data
-                                </p>
-                            </a>
-                        </li> --}}
-
-                        <li class="nav-item">
-                            <a href="{{ route('data.table') }}" class="nav-link ">
+                            <a href="{{ route('category') }}" class="nav-link ">
                                 <i class=" nav-icon fa fa-table"></i>
                                 <p class="text-bold" style="font-size: 16px">
-                                    Data Table
+                                    Category
                                 </p>
                             </a>
                         </li>
-
-                        {{-- <li class="nav-item">
-                            <a href="{{ route('mail') }}" class="nav-link ">
-                                <i class="nav-icon fa fa-envelope"></i>
+                        <li class="nav-item">
+                            <a href="{{ route('company.type') }}" class="nav-link ">
+                                <i class="nav-icon fas fa-industry"></i>
                                 <p class="text-bold" style="font-size: 16px">
-                                    Mail
+                                    Company Type
                                 </p>
                             </a>
-                        </li> --}}
-
+                        </li>
                         <li class="nav-item">
                             <a href="{{ route('mail.table') }}" class="nav-link ">
                                 <i class="nav-icon fa fa-envelope"></i>
@@ -144,7 +129,22 @@
                                 </p>
                             </a>
                         </li>
-
+                        <li class="nav-item">
+                            <a href="{{ route('data.table') }}" class="nav-link ">
+                                <i class="nav-icon far fa-address-card"></i>
+                                <p class="text-bold" style="font-size: 16px">
+                                    Users Data
+                                </p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('mail_create') }}" class="nav-link ">
+                                <i class="nav-icon fa fa-envelope-open"></i>
+                                <p class="text-bold" style="font-size: 16px">
+                                    Mail Create
+                                </p>
+                            </a>
+                        </li>
                     </ul>
                 </nav>
             </div>

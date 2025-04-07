@@ -70,73 +70,72 @@
 <section class="content">
     <div class="container-fluied">
         <div class="row">
-            <div class="col-md-12">
+            <div class="col-12">
                 <div class="card m-2">
                     <div class="card-body">
                         <div id="data-table">
-                            <div class="table-responsive">
-                                <table class="table table-bordered">
-                                    <thead style="font-size: 15px; background-color: rgb(241, 241, 221)">
-                                        <tr>
-                                            <th>No.</th>
-                                            <th>Name</th>
-                                            <th>Phone No</th>
-                                            <th>Email</th>
-                                            <th>Address</th>
-                                            <th>Country</th>
-                                            <th>State</th>
-                                            <th>City</th>
-                                            <th>PinCode</th>
-                                            <th>Company_Name</th>
-                                            <th>Designation</th>
-                                            <th>Action</th>
-                                        </tr>
-                                    </thead>
+                            <table id="example1" class="table table-bordered table-responsive">
+                                <thead>
+                                    <tr>
+                                        <th>No.</th>
+                                        <th>Name</th>
+                                        <th>Phone_No</th>
+                                        <th>Email</th>
+                                        <th>Address</th>
+                                        <th>Country</th>
+                                        <th>State</th>
+                                        <th>City</th>
+                                        <th>PinCode</th>
+                                        <th>Company_Name</th>
+                                        <th>Company_Type</th>
+                                        <th>Categories</th>
+                                        <th>Reference</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @php
+                                        $i = 1;
+                                    @endphp
+                                    @if (isset($datas))
+                                        @foreach ($datas as $data)
+                                            <tr>
+                                                <td>{{ $i }}</td>
+                                                <td>{{ $data->name }}</td>
+                                                <td>{{ $data->phone_no }}</td>
+                                                <td>{{ $data->email }}</td>
+                                                <td>{{ $data->address }}</td>
+                                                <td>{{ $data->country }}</td>
+                                                <td>{{ $data->state }}</td>
+                                                <td>{{ $data->city }}</td>
+                                                <td>{{ $data->pincode }}</td>
+                                                <td>{{ $data->company_name }}</td>
+                                                <td>{{ $data->company?->name }}</td>
+                                                <td>{{ implode(', ', $data->category_names) }}</td>
+                                                <td>{{ $data->reference }}</td>
 
-                                    <tbody>
-                                        @php
-                                            $i = 1;
-                                        @endphp
-                                        @if (isset($datas))
-                                            @foreach ($datas as $data)
-                                                <tr>
-                                                    <td>{{ $i }}</td>
-                                                    <td>{{ $data->name }}</td>
-                                                    <td>{{ $data->phone_no }}</td>
-                                                    <td>{{ $data->email }}</td>
-                                                    <td>{{ $data->address }}</td>
-                                                    <td>{{ $data->country }}</td>
-                                                    <td>{{ $data->state }}</td>
-                                                    <td>{{ $data->city }}</td>
-                                                    <td>{{ $data->pincode }}</td>
-                                                    <td>{{ $data->company_name }}</td>
-                                                    <td>{{ $data->designation }}</td>
+                                                <td>
+                                                    <a href="{{ route('data.edit', $data->id) }}"
+                                                        class="text-primary mr-2" title="Edit">
+                                                        <i class="fa fa-edit"></i>
+                                                    </a>
 
-                                                    <td>
-                                                        <a href="{{ route('data.edit', $data->id) }}"
-                                                            class="text-primary mr-2" title="Edit">
-                                                            <i class="fa fa-edit"></i>
-                                                        </a>
-                                                    
-                                                        <a href="{{ route('data.destroy', $data->id) }}"
-                                                            class="text-danger" title="Delete">
-                                                            <i class="fa fa-trash"></i>
-                                                        </a>
-                                                    </td>
+                                                    <a href="{{ route('data.destroy', $data->id) }}"
+                                                        class="text-danger" title="Delete">
+                                                        <i class="fa fa-trash"></i>
+                                                    </a>
+                                                </td>
 
-                                                </tr>
-                                                @php
-                                                    $i++;
-                                                @endphp
-                                            @endforeach
-                                        @endif
-                                    </tbody>
-                                </table>
-
-                                <div id="pagination-links">
-                                    {{ $datas->links('pagination::bootstrap-5') }}
-                                </div>
-
+                                            </tr>
+                                            @php
+                                                $i++;
+                                            @endphp
+                                        @endforeach
+                                    @endif
+                                </tbody>
+                            </table>
+                            <div id="pagination-links">
+                                {{ $datas->links('pagination::bootstrap-5') }}
                             </div>
                         </div>
                     </div>
@@ -180,6 +179,29 @@
 
         $('.fade').hide(3000);
 
+    });
+</script>
+
+<script>
+    $(document).ready(function() {
+        $("#example1").DataTable({
+            "responsive": false,
+            "lengthChange": false,
+            "autoWidth": false,
+            "paging": false,
+            "searching": true,
+            "ordering": true,
+            "info": false,
+            "columnDefs": [{
+                    "width": "10%",
+                    "targets": -1
+                },
+                {
+                    "orderable": false,
+                    "targets": -1
+                }
+            ]
+        });
     });
 </script>
 

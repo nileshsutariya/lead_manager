@@ -4,7 +4,7 @@
     <div class="container-fluid">
         <div class="row mt-1">
             <div class="col-12 col-md-7 text-center text-md-left">
-                <h1>Mail Data</h1>
+                <h1>Mail Templet</h1>
             </div>
 
             <div
@@ -17,8 +17,8 @@
                 </div>
 
                 <div class="mt-2 mt-md-0">
-                    <a href="{{ route('mail') }}" class="btn btn-primary btn-md" style="white-space: nowrap;">Send
-                        Mail</a>
+                    <a href="{{ route('mail') }}" class="btn btn-primary btn-md" style="white-space: nowrap;">Add
+                        Mail-Templet</a>
                 </div>
             </div>
         </div>
@@ -26,18 +26,19 @@
         <section class="content">
             <div class="container-fluied">
                 <div class="row">
-                    <div class="col-md-12">
-                        <div class="card m-2">
+                    <div class="col-12">
+                        <div class="card mt-3">
                             <div class="card-body">
                                 <div id="mail-table">
                                     <div class="table-responsive">
-                                        <table class="table table-bordered">
-                                            <thead style="font-size: 15px; background-color: rgb(241, 241, 221)">
+                                        <table id="example1" class="table table-bordered">
+                                            <thead>
                                                 <tr>
                                                     <th>No.</th>
                                                     <th>Name</th>
                                                     <th>Message</th>
-                                                    <th style="width: 4px">Action</th>
+                                                    <th>Category</th>
+                                                    <th>Action</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -49,6 +50,7 @@
                                                             <td>{{ $email->name }}</td>
                                                             <td>{{ Str::limit(strip_tags($email->message), 25, '...') }}
                                                             </td>
+                                                            <td>{{ $email->category->name }}</td>
                                                             <td>
                                                                 <a href="{{ route('mail.edit', $email->id) }}"
                                                                     class="text-primary mr-2" title="Edit">
@@ -129,4 +131,30 @@
     });
 </script>
 
+<script>
+    $(document).ready(function() {
+        $("#example1").DataTable({
+            "responsive": false,
+            "lengthChange": false,
+            "autoWidth": false,
+            "paging": false,
+            "searching": false,
+            "ordering": true,
+            "info": false,
+            "columnDefs": [{
+                    "width": "10%",
+                    "targets": -1
+                },
+                {
+                    "orderable": false,
+                    "targets": -1
+                }
+            ]
+        });
+    });
+</script>
+
 @include('layouts.footer')
+
+<style>
+</style>

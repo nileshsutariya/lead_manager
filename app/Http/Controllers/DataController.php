@@ -4,9 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Models\Data;
 use App\Models\Email;
+use App\Models\Category;
 use App\Models\Attachment;
+use App\Models\Mail_Queue;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
+use App\Models\Company_Detail;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -14,44 +18,43 @@ class DataController extends Controller
 {
     public function data_view()
     {
-        return view('data');
+        $companies = Company_Detail::pluck('name', 'id');
+        $categories = Category::pluck('name', 'id');
+        return view('data', compact('companies', 'categories'));
     }
 
     public function data_store(Request $request)
     {
+        // dd($request->all());
         $request->validate([
             'name' => 'required_without_all:email,phone,company_name',
             'email' => 'required_without_all:name,phone,company_name',
             'phone' => 'required_without_all:name,email,company_name',
             'company_name' => 'required_without_all:name,email,phone',
-
-            'address' => 'required',
-            'city' => 'required',
-            'state' => 'required',
-            'country' => 'required',
-            'pincode' => 'required',
-            // 'company_name' => 'required',
-            'designation' => 'required',
         ], [
-            'name.required_without_all' => 'The name field is required',
-            'email.required_without_all' => 'The email field is required',
-            'phone.required_without_all' => 'The phone_no field is required',
-            'company_name.required_without_all' => 'The company_name field is required',
+            'name.required_without_all' => 'name is required',
+            'email.required_without_all' => 'email is required',
+            'phone.required_without_all' => 'Phone_no is required.',
+            'company_name.required_without_all' => 'Company_name is required.',
         ]);
 
         $data = new Data();
 
-        $data->name = $request->name ?? '';
-        $data->phone_no = $request->phone ?? '';
-        $data->email = $request->email ?? '';
+        $data->name = $request->name;
+        $data->phone_no = $request->phone;
+        $data->email = $request->email;
         $data->address = $request->address;
         $data->city = $request->city;
         $data->state = $request->state;
         $data->country = $request->country;
         $data->pincode = $request->pincode;
-        $data->company_name = $request->company_name ?? '';
-        $data->designation = $request->designation;
+        $data->company_name = $request->company_name;
+        $data->reference = $request->reference;
+        $data->company_type = $request->company_type;
+        $data->categories = json_encode(array_map('intval', $request->category ?? []));
+        $data->status = $request->status ?? 0;
 
+        // dd($data);
         $data->save();
 
         return redirect()->route('data.table');
@@ -61,6 +64,11 @@ class DataController extends Controller
     {
         $datas = Data::paginate(25);
 
+        foreach ($datas as $data) {
+            $categoryIds = json_decode($data->categories, true);
+            $data->category_names = Category::whereIn('id', $categoryIds)->pluck('name')->toArray();
+        }
+
         if ($request->ajax()) {
             return response()->json([
                 'html' => view('data_table', compact('datas'))->render(),
@@ -69,47 +77,54 @@ class DataController extends Controller
         }
         return view('data_table', compact('datas'));
     }
+
     public function data_edit(string $id)
     {
-        $data = Data::findorfail($id);
-        return view('data', compact('data'));
+        $data = Data::find($id);
+        if (!$data) {
+            return redirect()->back()->with('error', 'DATA NOT FOUND');;
+        }
+        $companies = Company_Detail::pluck('name', 'id');
+        $categories = Category::pluck('name', 'id');
+        return view('data', compact('data', 'companies', 'categories'));
     }
 
     public function data_update(Request $request, string $id)
     {
+        // dd($id);
+        // dd($request->all());
         $request->validate([
             'name' => 'required_without_all:email,phone,company_name',
             'email' => 'required_without_all:name,phone,company_name',
             'phone' => 'required_without_all:name,email,company_name',
             'company_name' => 'required_without_all:name,email,phone',
-
-            'address' => 'required',
-            'city' => 'required',
-            'state' => 'required',
-            'country' => 'required',
-            'pincode' => 'required',
-            // 'company_name' => 'required',
-            'designation' => 'required',
         ], [
-            'name.required_without_all' => 'The name field is required',
-            'email.required_without_all' => 'The email field is required',
-            'phone.required_without_all' => 'The phone_no field is required',
-            'company_name.required_without_all' => 'The company_name field is required',
+            'name.required_without_all' => 'name is required',
+            'email.required_without_all' => 'email is required',
+            'phone.required_without_all' => 'Phone_no is required.',
+            'company_name.required_without_all' => 'Company_name is required.',
         ]);
 
-        $data = Data::findorfail($id);
 
-        $data->name = $request->name ?? '';
-        $data->phone_no = $request->phone ?? '';
-        $data->email = $request->email ?? '';
+        $data = Data::find($id);
+
+        if (!$data) {
+            return redirect()->back()->with('error', 'DATA NOT FOUND');;
+        }
+
+        $data->name = $request->name;
+        $data->phone_no = $request->phone;
+        $data->email = $request->email;
         $data->address = $request->address;
         $data->city = $request->city;
         $data->state = $request->state;
         $data->country = $request->country;
         $data->pincode = $request->pincode;
-        $data->company_name = $request->company_name ?? '';
-        $data->designation = $request->designation;
-
+        $data->company_name = $request->company_name;
+        $data->reference = $request->reference;
+        $data->company_type = $request->company_type;
+        $data->categories = json_encode(array_map('intval', $request->category ?? []));
+        $data->status = $request->status ?? 0;
         $data->save();
 
         return redirect()->route('data.table');
@@ -117,7 +132,13 @@ class DataController extends Controller
 
     public function data_destroy(string $id)
     {
-        $data = Data::findOrFail($id);
+        $data = Data::find($id);
+        if (!$data) {
+            return redirect()->back()->with('error', 'DATA NOT FOUND');;
+        }
+
+        // Mail_Queue::where('user_id', $id)->delete();
+
         $data->delete();
 
         return redirect()->route('data.table');
@@ -125,14 +146,16 @@ class DataController extends Controller
 
     public function mail()
     {
-        return view('mail');
+        $category = Category::pluck('name', 'id');
+        return view('mail', compact('category'));
     }
 
     public function mail_store(Request $request)
     {
         $request->validate([
             'name' => 'required',
-            'message' => 'required'
+            'message' => 'required',
+            'category' => 'required'
         ]);
 
         $email = new Email();
@@ -141,19 +164,21 @@ class DataController extends Controller
         $email->message = $request->message;
 
         $file = $request->file('attachments');
-        $fileName = time() . '_' . $file->getClientOriginalName();
-        $filePath = $file->storeAs('attachments', $fileName, 'public');
+        if ($file) {
+            $fileName = time() . '_' . $file->getClientOriginalName();
+            $filePath = $file->storeAs('attachments', $fileName, 'public');
 
-        $attachment = new Attachment();
-        $attachment->name = $fileName;
-        $attachment->path = $filePath;
-        $attachment->save();
+            $attachment = new Attachment();
+            $attachment->name = $fileName;
+            $attachment->path = $filePath;
+            $attachment->save();
 
-        $email->attachments_id = $attachment->id;
+            $email->attachments_id = $attachment->id;
+        }
 
         $slug = Str::slug($request->name);
         $email->slug = url($slug);
-
+        $email->category_id = $request->category;
         $email->status = $request->status ?? 0;
 
         $email->save();
@@ -163,8 +188,12 @@ class DataController extends Controller
 
     public function mail_edit(string $id)
     {
-        $email = Email::findorfail($id);
-        return view('mail', compact('email'));
+        $category = Category::pluck('name', 'id');
+        $email = Email::find($id);
+        if (!$email) {
+            return redirect()->back()->with('error', 'EMAIL NOT FOUND');;
+        }
+        return view('mail', compact('email', 'category'));
     }
 
     public function mail_update(Request $request, string $id)
@@ -173,54 +202,60 @@ class DataController extends Controller
             'name' => 'required',
             'message' => 'required'
         ]);
-    
-        $email = Email::findOrFail($id);
+
+        $email = Email::find($id);
+        if (!$email) {
+            return redirect()->back()->with('error', 'Email not found.');
+        }
+
         $email->name = $request->name;
         $email->message = $request->message;
+        $email->category_id = $request->category;
         $email->status = $request->status ?? 0;
-    
-        if ($request->hasFile('attachments')) {
-            $file = $request->file('attachments');
+
+        $file = $request->file('attachments');
+
+        if ($file) {
             $fileName = time() . '_' . $file->getClientOriginalName();
             $filePath = $file->storeAs('attachments', $fileName, 'public');
-    
+
             $attachment = new Attachment();
             $attachment->name = $fileName;
             $attachment->path = $filePath;
             $attachment->save();
-    
+
             $oldAttachment = $email->attachment;
             $email->attachments_id = $attachment->id;
             $email->save();
-    
+
             if ($oldAttachment) {
                 Storage::disk('public')->delete($oldAttachment->path);
                 $oldAttachment->delete();
             }
         }
-    
+
         $email->slug = url(Str::slug($request->name));
         $email->save();
-    
+
         return redirect()->route('mail.table')->with('success', 'Email updated successfully!');
     }
 
     public function mail_table(Request $request)
     {
-        $emails = Email::with('attachment')->paginate(25); 
-    
+        $emails = Email::with('attachment')->paginate(25);
+
         if ($request->ajax()) {
             return response()->json([
                 'html' => view('mail_table', compact('emails'))->render(),
                 'pagination' => (string) $emails->links('pagination::bootstrap-5')
             ]);
         }
-    
         return view('mail_table', compact('emails'));
     }
+
     public function mail_destroy(string $id)
     {
-        $email = Email::with('attachment')->findOrFail($id);
+        $email = Email::with('attachment')->find($id);
         $attachment = $email->attachment;
 
         $email->delete();
@@ -229,7 +264,7 @@ class DataController extends Controller
             Storage::disk('public')->delete($attachment->path);
             $attachment->delete();
         }
-        
+
         $emails = Email::with('attachment')->get();
 
         return view('mail_table', compact('emails'));
@@ -276,7 +311,6 @@ class DataController extends Controller
 
             fclose($file);
         };
-
         return new StreamedResponse($callback, 200, $headers);
     }
 
@@ -308,7 +342,155 @@ class DataController extends Controller
                 ]);
             $Count++;
         }
-
         return redirect()->back()->with('success', "{$Count} records imported successfully.");
+    }
+
+    public function category()
+    {
+        $mail_template = Email::pluck('name', 'id');
+        $categories = Category::with('emails')->get();
+        return view('category', compact('mail_template', 'categories'));
+    }
+
+    public function store_category(Request $request)
+    {
+        // dd($request->all());
+        $request->validate([
+            'name' => 'required',
+            // 'mail_templet' => 'required'
+        ]);
+
+        $category = new Category();
+
+        $category->name = $request->name;
+        $category->mail_templet = $request->mail_templet;
+
+        $category->save();
+
+        return redirect()->back();
+    }
+
+    public function mail_create()
+    {
+        $users = Data::first();
+        $emails = Email::pluck('name', 'id');
+        $categories = Category::pluck('name', 'id');
+        $companies = Company_Detail::pluck('name', 'id');
+        $userCategories = json_decode($users->categories ?? '[]', true);
+        // dd($companies);
+
+        return view('mail_create', compact('users', 'emails', 'categories', 'companies', 'userCategories'));
+    }
+
+    // public function create_mail_store(Request $request)
+    // {
+    //     $request->validate([
+    //         'users' => 'required',
+    //         'categories' => 'required',
+    //         'mail_template' => 'required'
+    //     ]);
+
+    //     $mail_send = new Mail_Queue();
+
+    //     $mail_send->user_id = $request->users;
+
+    //     $categories = array_map('intval', $request->categories);
+    //     // print_r($categories);die;
+    //     $mail_send->categories_id = json_encode($categories);
+    //     $mail_send->mail_template_id = $request->mail_template;
+    //     $mail_send->is_sent = 0;
+    //     $mail_send->mail_sent_at = now()->setTimezone('Asia/Kolkata');
+
+    //     // dd($mail_send->mail_sent_at);
+
+    //     $mail_send->save();
+
+    //     return redirect()->back();
+    // }
+
+    public function get_reference(Request $request)
+    {
+        $userId = $request->input('user_id');
+        $user = Data::find($userId);
+
+        if ($user) {
+            $reference = $user->reference;
+            return response()->json([
+                'success' => true,
+                'reference' => $reference,
+            ]);
+        }
+    }
+
+    public function company_type()
+    {
+        $companies = Company_Detail::all();
+        return view('company_type', compact('companies'));
+    }
+
+    public function store_company(Request $request)
+    {
+        $request->validate([
+            'name' => 'required'
+        ]);
+
+        $company = new Company_Detail();
+
+        $company->name = $request->name;
+        $company->save();
+
+        return redirect()->back();
+    }
+
+    public function search(Request $request)
+    {
+        $query = $request->input('query');
+
+        $users = Data::leftJoin('company_details', 'data.company_type', '=', 'company_details.id')
+            ->where('data.name', 'LIKE', "%{$query}%")
+            ->orWhere('data.email', 'LIKE', "%{$query}%")
+            ->orWhere('data.phone_no', 'LIKE', "%{$query}%")
+            ->orWhere('data.state', 'LIKE', "%{$query}%")
+            ->orWhere('data.country', 'LIKE', "%{$query}%")
+            ->orWhere('data.city', 'LIKE', "%{$query}%")
+            ->orWhere('data.reference', 'LIKE', "%{$query}%")
+            ->orWhere('data.address', 'LIKE', "%{$query}%")
+            ->orWhere('data.pincode', 'LIKE', "%{$query}%")
+            ->get([
+                'data.id',
+                'data.name',
+                'data.email',
+                'data.phone_no',
+                'data.company_name',
+                'company_details.name as company_type',
+                'data.country',
+                'data.state',
+                'data.city',
+                'data.categories',
+                'data.pincode',
+                'data.address',
+                'data.reference'
+            ]);
+
+        foreach ($users as $user) {
+            $categoryIds = json_decode($user->categories, true) ?? [];
+            $user->category_names = [];
+
+            if (!empty($categoryIds)) {
+                $user->category_names = DB::table('categories')
+                    ->whereIn('id', $categoryIds)
+                    ->pluck('name')
+                    ->toArray();
+            }
+        }
+        return response()->json($users);
+    }
+
+    public function show(Request $request)
+    {
+        $template = email::find($request->id);
+        return response()->json([
+            'message' => $template->message ?? ''
+        ]);
     }
 }

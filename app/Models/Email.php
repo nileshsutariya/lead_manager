@@ -15,6 +15,7 @@ class Email extends Model
         'slug',
         'message',
         'attachments_id',
+        'category',
         'status'
 
     ];
@@ -22,4 +23,10 @@ class Email extends Model
     public function attachment() {
         return $this->belongsTo(Attachment::class, 'attachments_id');
     }
+
+    public function category()
+    {
+        return $this->belongsTo(Category::class, 'category_id');
+    }
+    
 }

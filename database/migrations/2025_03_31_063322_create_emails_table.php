@@ -15,16 +15,15 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('slug');
-            $table->string('message');
+            $table->longText('message');
+            $table->unsignedBigInteger('attachments_id')->nullable();
+            $table->unsignedBigInteger('category_id');
             $table->boolean('status')->default(1);
-            $table->unsignedBigInteger('attachments_id'); 
             $table->timestamps();
-        
-            $table->foreign('attachments_id')
-                  ->references('id')
-                  ->on('attachments'); 
+
+            $table->foreign('attachments_id')->references('id')->on('attachments');
+            $table->foreign('category_id')->references('id')->on('categories');
         });
-        
     }
 
     /**

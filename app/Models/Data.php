@@ -20,6 +20,14 @@ class Data extends Model
         'country',
         'pincode',
         'company_name',
-        'designation'
+        'reference',
+        'company_type',
+        'status',
+        'is_subscribed'
     ];
+
+    public function company()
+    {
+        return $this->belongsTo(Company_Detail::class, 'company_type');
+    }
 }

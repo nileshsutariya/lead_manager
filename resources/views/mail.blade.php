@@ -32,15 +32,28 @@
 
                 <div class="mb-3">
                     <label for="attachment" class="form-label fw-semibold">Attachment</label>
-                
-                    <!-- Hidden Input to Store Existing File -->
-                    @if(isset($email->attachment))
-                    <div class="mb-2">
-                        <p>Current File: <span class="text-primary">{{ $email->attachment->name }}</span></p>
-                    </div>
+                    @if (isset($email->attachment))
+                        <div class="mb-2">
+                            <p>Current File: <span class="text-primary">{{ $email->attachment->name }}</span></p>
+                        </div>
                     @endif
-                
                     <input type="file" class="form-control border rounded-2 p-2" id="attachment" name="attachments">
+                </div>
+
+                <div class="mb-3">
+                    <label for="category">Category</label>
+                    <select class="form-control select2" id="category" name="category">
+                        <option value="">Select a Category</option>
+                        @foreach ($category as $id => $name)
+                            <option value="{{ $id }}"
+                                {{ isset($email) && $email->category_id == $id ? 'selected' : '' }}>
+                                {{ $name }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('category')
+                        <div class="text-danger">{{ $message }}</div>
+                    @enderror
                 </div>
 
                 <div class="mb-3">
@@ -71,6 +84,18 @@
                 ['view', ['codeview']]
             ]
         });
+
+        $('#category').select2({
+            placeholder: "Select a Category",
+            allowClear: true
+        });
+
+        $('.select2-selection').css({
+            'height': '38px',
+            'font-size': '16px',
+            'padding': '5px 12px'
+        });
+
     });
 
     let existingContent = $('#message').text();
