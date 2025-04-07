@@ -148,128 +148,240 @@
 </section>
 
 <script>
-$(document).ready(function() {
-    let userSearchInput = document.querySelector("#user_search");
-    let tagify = new Tagify(userSearchInput, {
-        maxTags: 5,
-        dropdown: {
-            enabled: 3,
-            maxItems: 10
+    $(document).ready(function() {
+        let userSearchInput = document.querySelector("#user_search");
+        let tagify = new Tagify(userSearchInput, {
+            maxTags: 5,
+            dropdown: {
+                enabled: 3,
+                maxItems: 10
+            }
+        });
+
+        tagify.on("input", function(e) {
+            let query = e.detail.value;
+
+            if (query.length > 2) {
+                $.ajax({
+                    url: "{{ route('users.search') }}",
+                    type: "GET",
+                    data: {
+                        query: query
+                    },
+                    success: function(response) {
+                        if (response.length > 0) {
+                            tagify.settings.whitelist = response.map(user => ({
+                                value: user.name || user.email || user
+                                    .phone_no || user.company_name,
+                                id: user.id,
+                                email: user.email,
+                                name: user.name,
+                                phone: user.phone_no,
+                                company_name: user.company_name,
+                                company_type: user.company_type,
+                                country: user.country,
+                                state: user.state,
+                                city: user.city,
+                                categories: user.category_names,
+                                pincode: user.pincode,
+                                address: user.address,
+                                reference: user.reference
+                            }));
+                            tagify.dropdown.show();
+                        } else {
+                            resetUserFields();
+                        }
+                    }
+                });
+            }
+        });
+
+        tagify.on("add", function(e) {
+            let user = e.detail.data;
+
+            if (user.id) {
+                populateUserFields(user);
+            } else {
+                resetUserFields();
+            }
+        });
+
+        tagify.on("remove", function(e) {
+            let remainingUsers = tagify.value;
+
+            if (remainingUsers.length > 0) {
+                let latestUser = remainingUsers[remainingUsers.length - 1];
+                populateUserFields(latestUser);
+            } else {
+                resetUserFields();
+            }
+        });
+
+        function populateUserFields(user) {
+            $("#user_id").val(user.id || '');
+            $("#name").val(user.name || '');
+            $("#email").val(user.email || '');
+            $("#phone_no").val(user.phone || '');
+            $("#company_name").val(user.company_name || '');
+            $("#country").val(user.country || '');
+            $("#state").val(user.state || '');
+            $("#city").val(user.city || '');
+            $("#pincode").val(user.pincode || '');
+            $("#address").val(user.address || '');
+            $("#reference").val(user.reference || '');
+
+            $("#categories").val([]).trigger("change");
+            let selectedCategoryIds = [];
+            $("#categories option").each(function() {
+                if (user.categories && user.categories.includes($(this).text().trim())) {
+                    selectedCategoryIds.push($(this).val());
+                }
+            });
+            $("#categories").val(selectedCategoryIds).trigger("change");
+
+            let companyTypeVal = null;
+            $("#company_type option").each(function() {
+                if ($(this).text() === (user.company_type || "")) {
+                    companyTypeVal = $(this).val();
+                }
+            });
+            $("#company_type").val(companyTypeVal).trigger("change");
+
+            $("#user_details").show();
+            $("#updateBtn").removeClass('d-none');
+            $("#submitBtn").addClass('d-none');
         }
-    });
 
-    tagify.on("input", function(e) {
-        let query = e.detail.value;
+        function resetUserFields() {
+            $("#user_id").val('');
+            $("#name").val('');
+            $("#email").val('');
+            $("#phone_no").val('');
+            $("#company_name").val('');
+            $("#company_type").val('').trigger("change");
+            $("#country").val('');
+            $("#state").val('');
+            $("#city").val('');
+            $("#categories").val([]).trigger("change");
+            $("#pincode").val('');
+            $("#address").val('');
+            $("#reference").val('');
 
-        if (query.length > 2) {
+            $("#user_details").show();
+            $("#updateBtn").addClass('d-none');
+            $("#submitBtn").removeClass('d-none');
+        }
+
+        $("#submitBtn").on("click", function(e) {
+            e.preventDefault();
+            $(".text-danger.dynamic-error").remove();
+
+            let country = $("#country").val().trim();
+            let email = $("#email").val().trim();
+            let phone = $("#phone_no").val().trim();
+            let companyName = $("#company_name").val().trim();
+            let name = $("#name").val().trim();
+
+            if (!email && !phone && !companyName && !name) {
+                const errorMsg =
+                    '<div class="text-danger dynamic-error">name || email || phone || company_name one of these fields is required</div>';
+
+                $("#email").after(errorMsg);
+                $("#phone_no").after(errorMsg);
+                $("#company_name").after(errorMsg);
+                $("#name").closest('.form-group, .mb-3').append(errorMsg);
+                return;
+            }
+
+            if (!country) {
+                if (!$("#country").siblings(".text-danger").length) {
+                    $("#country").after(
+                        '<div class="text-danger">The country field is required.</div>');
+                }
+                return;
+            } else {
+                $("#country").siblings(".text-danger").remove();
+            }
+
+            let form = document.getElementById('userForm');
+            let formData = new FormData(form);
+
             $.ajax({
-                url: "{{ route('users.search') }}",
-                type: "GET",
-                data: { query: query },
+                url: "{{ route('data.store') }}",
+                type: "POST",
+                data: formData,
+                processData: false,
+                contentType: false,
                 success: function(response) {
-                    if (response.length > 0) {
-                        tagify.settings.whitelist = response.map(user => ({
-                            value: user.name || user.email || user.phone_no || user.company_name,
-                            id: user.id,
-                            email: user.email,
-                            name: user.name,
-                            phone: user.phone_no,
-                            company_name: user.company_name,
-                            company_type: user.company_type,
-                            country: user.country,
-                            state: user.state,
-                            city: user.city,
-                            categories: user.category_names,
-                            pincode: user.pincode,
-                            address: user.address,
-                            reference: user.reference
-                        }));
-                        tagify.dropdown.show();
+                    window.location.href = "{{ route('data.table') }}";
+                },
+                error: function(xhr) {
+                    if (xhr.status === 422) {
+                        let errors = xhr.responseJSON.errors;
+                        $(".text-danger").remove();
+
+                        $.each(errors, function(key, value) {
+                            let input = $(`[name="${key}"]`);
+                            input.siblings(".text-danger").remove();
+                            input.after(
+                                `<div class="text-danger">${value[0]}</div>`);
+                        });
+
+                        $("#user_details").show();
                     } else {
-                        resetUserFields();
+                        alert("Something went wrong.");
+                        console.log(xhr.responseText);
                     }
                 }
             });
-        }
-    });
+        });
 
-    tagify.on("add", function(e) {
-        let user = e.detail.data;
+        $("#updateBtn").on("click", function(e) {
+            e.preventDefault();
 
-        if (user.id) {
-            populateUserFields(user);
-        } else {
-            resetUserFields();
-        }
-    });
+            $("#country").siblings(".text-danger").remove();
+            $(".text-danger.dynamic-error").remove();
 
-    tagify.on("remove", function(e) {
-        let remainingUsers = tagify.value;
+            let country = $("#country").val().trim();
+            let email = $("#email").val().trim();
+            let phone = $("#phone_no").val().trim();
+            let companyName = $("#company_name").val().trim();
+            let name = $("#name").val().trim();
 
-        if (remainingUsers.length > 0) {
-            let latestUser = remainingUsers[remainingUsers.length - 1];
-            populateUserFields(latestUser); 
-        } else {
-            resetUserFields(); 
-        }
-    });
+            if (!email && !phone && !companyName && !name) {
+                const errorMsg =
+                    '<div class="text-danger dynamic-error">name || email || phone || company_name one of these fields are required</div>';
 
-    function populateUserFields(user) {
-        $("#user_id").val(user.id || '');
-        $("#name").val(user.name || '');
-        $("#email").val(user.email || '');
-        $("#phone_no").val(user.phone || '');
-        $("#company_name").val(user.company_name || '');
-        $("#country").val(user.country || '');
-        $("#state").val(user.state || '');
-        $("#city").val(user.city || '');
-        $("#pincode").val(user.pincode || '');
-        $("#address").val(user.address || '');
-        $("#reference").val(user.reference || '');
+                $("#email").after(errorMsg);
+                $("#phone_no").after(errorMsg);
+                $("#company_name").after(errorMsg);
+                $("#name").closest('.form-group, .mb-3').append(errorMsg);
+                return;
+            }
 
-        $("#categories").val([]).trigger("change");
-        let selectedCategoryIds = [];
-        $("#categories option").each(function() {
-            if (user.categories && user.categories.includes($(this).text().trim())) {
-                selectedCategoryIds.push($(this).val());
+            if (!country) {
+                $("#country").after(
+                    '<div class="text-danger dynamic-error">The country field is required.</div>');
+                return;
+            }
+
+            let userId = $("#user_id").val();
+            let updateUrl = "{{ route('data.update', ':id') }}".replace(':id', userId);
+            $("#userForm").attr("action", updateUrl);
+            $("#userForm").submit();
+        });
+
+        $("#email, #phone_no, #company_name, #name").on("input change", function() {
+            let email = $("#email").val().trim();
+            let phone = $("#phone_no").val().trim();
+            let companyName = $("#company_name").val().trim();
+            let name = $("#name").val().trim();
+
+            if (email || phone || companyName || name) {
+                $(".text-danger.dynamic-error").remove();
             }
         });
-        $("#categories").val(selectedCategoryIds).trigger("change");
-
-        let companyTypeVal = null;
-        $("#company_type option").each(function() {
-            if ($(this).text() === (user.company_type || "")) {
-                companyTypeVal = $(this).val();
-            }
-        });
-        $("#company_type").val(companyTypeVal).trigger("change");
-
-        $("#user_details").show();
-        $("#updateBtn").removeClass('d-none');
-        $("#submitBtn").addClass('d-none');
-    }
-
-    function resetUserFields() {
-        $("#user_id").val('');
-        $("#name").val('');
-        $("#email").val('');
-        $("#phone_no").val('');
-        $("#company_name").val('');
-        $("#company_type").val('').trigger("change");
-        $("#country").val('');
-        $("#state").val('');
-        $("#city").val('');
-        $("#categories").val([]).trigger("change");
-        $("#pincode").val('');
-        $("#address").val('');
-        $("#reference").val('');
-
-        $("#user_details").show();
-        $("#updateBtn").addClass('d-none');
-        $("#submitBtn").removeClass('d-none');
-    }
-});
-
+    });
 </script>
 
 <script>
