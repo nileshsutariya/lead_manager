@@ -382,31 +382,36 @@ class DataController extends Controller
         return view('mail_create', compact('users', 'emails', 'categories', 'companies', 'userCategories'));
     }
 
-    // public function create_mail_store(Request $request)
-    // {
-    //     $request->validate([
-    //         'users' => 'required',
-    //         'categories' => 'required',
-    //         'mail_template' => 'required'
-    //     ]);
+    public function create_mail_store(Request $request)
+    {
+        // dd($request->all());
+        $request->validate([
+            'user_search' => 'required',
+            'mail_template' => 'required',
+            'mail_subject' => 'required',
+        ]);
 
-    //     $mail_send = new Mail_Queue();
+        $jsonData = json_decode($request->user_search, true);
 
-    //     $mail_send->user_id = $request->users;
+        $typedNames = array_map(function ($user) {
+            return $user['value'];
+        }, $jsonData);
 
-    //     $categories = array_map('intval', $request->categories);
-    //     // print_r($categories);die;
-    //     $mail_send->categories_id = json_encode($categories);
-    //     $mail_send->mail_template_id = $request->mail_template;
-    //     $mail_send->is_sent = 0;
-    //     $mail_send->mail_sent_at = now()->setTimezone('Asia/Kolkata');
+        $mail_send = new Mail_Queue();
+        $mail_send->users_email = json_encode($typedNames);
+        $mail_send->mail_body = $request->mail_message;
+        $mail_send->subject = $request->mail_subject;
+        $mail_send->country = $request->country;
+        $mail_send->attachment_ids = json_encode($request->attachments ?? []);
+        $mail_send->is_sent = 0;
+        $mail_send->mail_sent_at = now()->setTimezone('Asia/Kolkata');
 
-    //     // dd($mail_send->mail_sent_at);
+        // dd($mail_send->mail_sent_at);
 
-    //     $mail_send->save();
+        $mail_send->save();
 
-    //     return redirect()->back();
-    // }
+        return redirect()->back();
+    }
 
     public function get_reference(Request $request)
     {
@@ -450,12 +455,14 @@ class DataController extends Controller
             ->where('data.name', 'LIKE', "%{$query}%")
             ->orWhere('data.email', 'LIKE', "%{$query}%")
             ->orWhere('data.phone_no', 'LIKE', "%{$query}%")
+            ->orWhere('data.company_name', 'LIKE', "%{$query}%")
             ->orWhere('data.state', 'LIKE', "%{$query}%")
             ->orWhere('data.country', 'LIKE', "%{$query}%")
             ->orWhere('data.city', 'LIKE', "%{$query}%")
             ->orWhere('data.reference', 'LIKE', "%{$query}%")
             ->orWhere('data.address', 'LIKE', "%{$query}%")
             ->orWhere('data.pincode', 'LIKE', "%{$query}%")
+
             ->get([
                 'data.id',
                 'data.name',

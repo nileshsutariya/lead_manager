@@ -10,17 +10,20 @@
 
         <div class="card m-1">
             <div class="card-body">
-                <div class="mb-3 position-relative">
-                    <label for="user_search">Search User</label>
-                    <input type="text" class="form-control" id="user_search" name="user_search"
-                        placeholder="Search by name, email...">
-                    <input type="hidden" id="user_id" name="user_id">
-                    <div id="search_results" class="list-group position-absolute w-100 mt-1 bg-white border shadow"
-                        style="z-index: 1000; display: none;"></div>
-                </div>
-
-                <form id="userForm" method="POST">
+                <form id="userForm" method="POST" action="{{ route('create.mail.store') }}" enctype="multipart/form-data">
                     @csrf
+                    <div class="mb-3 position-relative">
+                        <label for="user_search">Search User</label>
+                        <input type="text" class="form-control" id="user_search" name="user_search"
+                            placeholder="Search by name, email...">
+                        <input type="hidden" id="user_search_data" name="user_search_data">
+                        <div id="search_results" class="list-group position-absolute w-100 mt-1 bg-white border shadow"
+                            style="z-index: 1000; display: none;"></div>
+                        @error('user_search')
+                            <div class="text-danger">{{ $message }}</div>
+                        @enderror
+                    </div>
+
                     <input type="hidden" id="user_id" name="user_id">
                     <div id="user_details" style="display: none;">
                         <div class="row">
@@ -81,7 +84,6 @@
                                             </option>
                                         @endforeach
                                     </select>
-
                                 </div>
                             </div>
 
@@ -106,42 +108,47 @@
                             <button type="button" id="updateBtn" class="btn btn-success d-none">Update</button>
                         </div>
                     </div>
+
+
+                    <div class="mb-3 mt-4">
+                        <label for="mail_template">Mail Template</label>
+                        <select class="form-control select2" id="mail_template" name="mail_template"
+                            style="width: 100%;">
+                            <option value="">Select a Mail Template</option>
+                            @foreach ($emails as $id => $name)
+                                <option value="{{ $id }}">{{ $name }}</option>
+                            @endforeach
+                        </select>
+                        @error('mail_template')
+                            <div class="text-danger">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div id="mail_template_details" style="display: none;">
+                        <div class="mb-3">
+                            <label for="mail_subject">Subject</label>
+                            <input type="text" class="form-control" id="mail_subject" name="mail_subject">
+                            @error('mail_subject')
+                                <div class="text-danger">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="mail_message">Message</label>
+                            <textarea class="form-control" id="mail_message" name="mail_message"></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="attachments">Attachments</label>
+                            <input type="file" class="form-control" id="attachments" name="attachments[]"
+                                multiple>
+                        </div>
+                    </div>
+
+                    <div class="card-footer mt-2 text-right">
+                        <button type="submit" class="btn btn-primary">Send Mail</button>
+                    </div>
                 </form>
-
-                <div class="mb-3 mt-4">
-                    <label for="mail_template">Mail Template</label>
-                    <select class="form-control select2" id="mail_template" name="mail_template"
-                        style="width: 100%;">
-                        <option value="">Select a Mail Template</option>
-                        @foreach ($emails as $id => $name)
-                            <option value="{{ $id }}">{{ $name }}</option>
-                        @endforeach
-                    </select>
-                    @error('mail_template')
-                        <div class="text-danger">{{ $message }}</div>
-                    @enderror
-                </div>
-
-                <div id="mail_template_details" style="display: none;">
-                    <div class="mb-3">
-                        <label for="mail_subject">Subject</label>
-                        <input type="text" class="form-control" id="mail_subject" name="mail_subject">
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="mail_message">Message</label>
-                        <textarea class="form-control" id="mail_message" name="mail_message"></textarea>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="attachments">Attachments</label>
-                        <input type="file" class="form-control" id="attachments" name="attachments[]" multiple>
-                    </div>
-                </div>
-
-                <div class="card-footer mt-2 text-right">
-                    <button type="submit" class="btn btn-primary">Send Mail</button>
-                </div>
             </div>
         </div>
     </div>
@@ -213,7 +220,7 @@
                 let latestUser = remainingUsers[remainingUsers.length - 1];
                 populateUserFields(latestUser);
             } else {
-                resetUserFields();
+                $("#user_details").hide();
             }
         });
 
@@ -423,6 +430,20 @@
                 $('#mail_message').summernote('code', '');
             }
         });
+
+        $('#userForm').on('submit', function(e) {
+            let userSearch = $('#user_search').val().trim();
+
+            if (!userSearch) {
+                if (!$('#user_search_error').length) {
+                    $('#user_search').after(
+                        '<div class="text-danger" id="user_search_error">Please select at least one user.</div>'
+                        );
+                }
+                e.preventDefault();
+            }
+        });
+
     });
 </script>
 
