@@ -138,7 +138,7 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="{{ route('mail_create') }}" class="nav-link ">
+                            <a href="{{ route('mail.create') }}" class="nav-link ">
                                 <i class="nav-icon fa fa-envelope-open"></i>
                                 <p class="text-bold" style="font-size: 16px">
                                     Mail Create

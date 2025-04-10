@@ -105,7 +105,6 @@ class DataController extends Controller
             'company_name.required_without_all' => 'Company_name is required.',
         ]);
 
-
         $data = Data::find($id);
 
         if (!$data) {
@@ -354,10 +353,8 @@ class DataController extends Controller
 
     public function store_category(Request $request)
     {
-        // dd($request->all());
         $request->validate([
             'name' => 'required',
-            // 'mail_templet' => 'required'
         ]);
 
         $category = new Category();
@@ -384,31 +381,44 @@ class DataController extends Controller
 
     public function create_mail_store(Request $request)
     {
-        // dd($request->all());
         $request->validate([
             'user_search' => 'required',
             'mail_template' => 'required',
-            'mail_subject' => 'required',
         ]);
 
         $jsonData = json_decode($request->user_search, true);
 
-        $typedNames = array_map(function ($user) {
-            return $user['value'];
-        }, $jsonData);
+        $attachmentIds = [];
 
-        $mail_send = new Mail_Queue();
-        $mail_send->users_email = json_encode($typedNames);
-        $mail_send->mail_body = $request->mail_message;
-        $mail_send->subject = $request->mail_subject;
-        $mail_send->country = $request->country;
-        $mail_send->attachment_ids = json_encode($request->attachments ?? []);
-        $mail_send->is_sent = 0;
-        $mail_send->mail_sent_at = now()->setTimezone('Asia/Kolkata');
+        if ($request->has('attachments')) {
+            foreach ($request->attachments as $file) {
+                $fileName = time() . '_' . $file->getClientOriginalName();
+                $filePath = $file->storeAs('attachments', $fileName, 'public');
 
-        // dd($mail_send->mail_sent_at);
+                $attachment = Attachment::create([
+                    'name' => $fileName,
+                    'path' => $filePath,
+                ]);
 
-        $mail_send->save();
+                $attachmentIds[] = $attachment->id;
+            }
+        }
+
+        foreach ($jsonData as $user) {
+            if (empty($user['email'])) {
+                continue;
+            }
+            $mail_send = new Mail_Queue();
+            $mail_send->users_email = json_encode($user['email']);
+            $mail_send->mail_body = $request->mail_message;
+            $mail_send->subject = $request->mail_subject;
+            $mail_send->country = $user['country'];
+            $mail_send->attachment_ids = json_encode($attachmentIds);
+            $mail_send->is_sent = 0;
+            $mail_send->mail_sent_at = now()->setTimezone('Asia/Kolkata');
+
+            $mail_send->save();
+        }
 
         return redirect()->back();
     }
@@ -456,27 +466,10 @@ class DataController extends Controller
             ->orWhere('data.email', 'LIKE', "%{$query}%")
             ->orWhere('data.phone_no', 'LIKE', "%{$query}%")
             ->orWhere('data.company_name', 'LIKE', "%{$query}%")
-            ->orWhere('data.state', 'LIKE', "%{$query}%")
-            ->orWhere('data.country', 'LIKE', "%{$query}%")
-            ->orWhere('data.city', 'LIKE', "%{$query}%")
-            ->orWhere('data.reference', 'LIKE', "%{$query}%")
-            ->orWhere('data.address', 'LIKE', "%{$query}%")
-            ->orWhere('data.pincode', 'LIKE', "%{$query}%")
 
             ->get([
-                'data.id',
-                'data.name',
-                'data.email',
-                'data.phone_no',
-                'data.company_name',
+                'data.*',
                 'company_details.name as company_type',
-                'data.country',
-                'data.state',
-                'data.city',
-                'data.categories',
-                'data.pincode',
-                'data.address',
-                'data.reference'
             ]);
 
         foreach ($users as $user) {

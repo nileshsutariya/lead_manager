@@ -27,7 +27,7 @@ Route::post('/import-csv', [DataController::class, 'import_csv'])->name('import.
 Route::get('/category', [DataController::class, 'category'])->name('category');
 Route::post('/category_store', [DataController::class, 'store_category'])->name('category.store');
 
-Route::get('/mail_create', [DataController::class, 'mail_create'])->name('mail_create');
+Route::get('/mail_create', [DataController::class, 'mail_create'])->name('mail.create');
 Route::post('/mail_create/store', [DataController::class, 'create_mail_store'])->name('create.mail.store');
 
 Route::get('/get_reference',[DataController::class, 'get_reference'])->name('get.reference');
@@ -36,3 +36,5 @@ Route::Post('/company_type/store', [DataController::class,'store_company'])->nam
 
 Route::get('/users/search', [DataController::class, 'search'])->name('users.search');
 Route::get('/mail-templates/show', [DataController::class, 'show'])->name('mail.templates.show');
+Route::get('/user/mail-history', [DataController::class, 'mailHistory'])->name('user.mail.history');
+

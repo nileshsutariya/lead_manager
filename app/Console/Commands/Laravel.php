@@ -6,6 +6,8 @@ use App\Mail\SendMail;
 use App\Models\Mail_Queue;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\DB;
+
 
 class Laravel extends Command
 {
@@ -29,17 +31,30 @@ class Laravel extends Command
     public function handle()
     {
         $emails = Mail_Queue::where('mail_queue.is_sent', 0)
-            ->join('data', 'mail_queue.users_email', '=', 'data.id')
-            ->select('data.email', 'mail_queue.id', 'mail_Queue.mail_body', 'mail_Queue.subject')
+            ->select('mail_Queue.id', 'mail_Queue.users_email', 'mail_Queue.subject', 'mail_Queue.mail_body', 'mail_queue.attachment_ids')
             ->get();
-
-        print_r($emails);
-        die;
+        // dd($emails);
 
         foreach ($emails as $email) {
-            Mail::raw($email->message, function ($message) use ($email) {
-                $message->to($email->email)
-                    ->subject('Your Email Subject Here');
+            $changeEmail = trim($email->users_email, "\" \t\n\r\0\x0B");
+            $attachmentIds = json_decode($email->attachment_ids, true);
+
+            $attachments = [];
+            if (!empty($attachmentIds)) {
+                $attachments = DB::table('attachments')
+                    ->whereIn('id', $attachmentIds)
+                    ->pluck('path')
+                    ->toArray();
+            }
+
+            Mail::html($email->mail_body, function ($message) use ($email, $changeEmail, $attachments) {
+                $message->to($changeEmail)
+                    ->subject($email->subject);
+
+                foreach ($attachments as $path) {
+                    $message->attach(storage_path('app/public/' . $path));
+                }
+
                 $email->is_sent = 1;
                 $email->save();
             });
