@@ -74,22 +74,22 @@
                 <div class="card m-2">
                     <div class="card-body">
                         <div id="data-table">
-                            <table id="example1" class="table table-bordered table-responsive">
+                            <table id="example1" class="table table-bordered ">
                                 <thead>
                                     <tr>
                                         <th>No.</th>
                                         <th>Name</th>
                                         <th>Phone_No</th>
                                         <th>Email</th>
-                                        <th>Address</th>
+                                        {{-- <th>Address</th>
                                         <th>Country</th>
                                         <th>State</th>
                                         <th>City</th>
-                                        <th>PinCode</th>
+                                        <th>PinCode</th> --}}
                                         <th>Company_Name</th>
-                                        <th>Company_Type</th>
+                                        {{-- <th>Company_Type</th>
                                         <th>Categories</th>
-                                        <th>Reference</th>
+                                        <th>Reference</th> --}}
                                         <th>Action</th>
                                     </tr>
                                 </thead>
@@ -104,15 +104,15 @@
                                                 <td>{{ $data->name }}</td>
                                                 <td>{{ $data->phone_no }}</td>
                                                 <td>{{ $data->email }}</td>
-                                                <td>{{ $data->address }}</td>
+                                                {{-- <td>{{ $data->address }}</td>
                                                 <td>{{ $data->country }}</td>
                                                 <td>{{ $data->state }}</td>
                                                 <td>{{ $data->city }}</td>
-                                                <td>{{ $data->pincode }}</td>
+                                                <td>{{ $data->pincode }}</td> --}}
                                                 <td>{{ $data->company_name }}</td>
-                                                <td>{{ $data->company?->name }}</td>
+                                                {{-- <td>{{ $data->company?->name }}</td>
                                                 <td>{{ implode(', ', $data->category_names) }}</td>
-                                                <td>{{ $data->reference }}</td>
+                                                <td>{{ $data->reference }}</td> --}}
 
                                                 <td>
                                                     <a href="{{ route('data.edit', $data->id) }}"

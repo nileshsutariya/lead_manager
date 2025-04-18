@@ -57,7 +57,7 @@ class DataController extends Controller
         // dd($data);
         $data->save();
 
-        return redirect()->route('data.table');
+        return redirect()->route('data.table')->with('primary', 'Contact details saved successfully!');
     }
 
     public function data_table(Request $request)
@@ -126,7 +126,15 @@ class DataController extends Controller
         $data->status = $request->status ?? 0;
         $data->save();
 
-        return redirect()->route('data.table');
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Data updated successfully',
+                'data' => $data
+            ]);
+        }
+
+        return redirect()->route('data.table')->with('success', 'Contact details Updated successfully!');
     }
 
     public function data_destroy(string $id)
@@ -369,24 +377,25 @@ class DataController extends Controller
 
     public function mail_create()
     {
-        $users = Data::first();
         $emails = Email::pluck('name', 'id');
         $categories = Category::pluck('name', 'id');
         $companies = Company_Detail::pluck('name', 'id');
-        $userCategories = json_decode($users->categories ?? '[]', true);
         // dd($companies);
 
-        return view('mail_create', compact('users', 'emails', 'categories', 'companies', 'userCategories'));
+        $mail_queues = Mail_Queue::where('is_sent', 1)
+            ->orderBy('created_at', 'desc')
+            ->limit(10)
+            ->get();
+
+        return view('mail_create', compact('companies', 'categories', 'emails', 'mail_queues'));
     }
 
     public function create_mail_store(Request $request)
     {
         $request->validate([
-            'user_search' => 'required',
-            'mail_template' => 'required',
+            'search_user' => 'required',
+            'mail_template' => 'required'
         ]);
-
-        $jsonData = json_decode($request->user_search, true);
 
         $attachmentIds = [];
 
@@ -404,22 +413,17 @@ class DataController extends Controller
             }
         }
 
-        foreach ($jsonData as $user) {
-            if (empty($user['email'])) {
-                continue;
-            }
+        if ($request->email != null) {
             $mail_send = new Mail_Queue();
-            $mail_send->users_email = json_encode($user['email']);
+            $mail_send->users_email = $request->email;
             $mail_send->mail_body = $request->mail_message;
             $mail_send->subject = $request->mail_subject;
-            $mail_send->country = $user['country'];
+            $mail_send->country = $request->country;
             $mail_send->attachment_ids = json_encode($attachmentIds);
             $mail_send->is_sent = 0;
             $mail_send->mail_sent_at = now()->setTimezone('Asia/Kolkata');
-
             $mail_send->save();
         }
-
         return redirect()->back();
     }
 
@@ -459,30 +463,37 @@ class DataController extends Controller
 
     public function search(Request $request)
     {
-        $query = $request->input('query');
+        $query = $request->get('q');
 
-        $users = Data::leftJoin('company_details', 'data.company_type', '=', 'company_details.id')
-            ->where('data.name', 'LIKE', "%{$query}%")
-            ->orWhere('data.email', 'LIKE', "%{$query}%")
-            ->orWhere('data.phone_no', 'LIKE', "%{$query}%")
-            ->orWhere('data.company_name', 'LIKE', "%{$query}%")
+        $users = Data::where('name', 'like', "%$query%")
+            ->orWhere('email', 'like', "%$query%")
+            ->orWhere('phone_no', 'like', "%$query%")
+            ->orWhere('company_name', 'like', "%$query%")
+            ->get()
+            ->map(function ($user) {
+                $categoryIds = json_decode($user->categories, true) ?? [];
 
-            ->get([
-                'data.*',
-                'company_details.name as company_type',
-            ]);
-
-        foreach ($users as $user) {
-            $categoryIds = json_decode($user->categories, true) ?? [];
-            $user->category_names = [];
-
-            if (!empty($categoryIds)) {
-                $user->category_names = DB::table('categories')
+                $categoryNames = DB::table('categories')
                     ->whereIn('id', $categoryIds)
-                    ->pluck('name')
-                    ->toArray();
-            }
-        }
+                    ->pluck('name');
+
+                return [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'phone_no' => $user->phone_no,
+                    'company_name' => $user->company_name,
+                    'country' => $user->country,
+                    'state' => $user->state,
+                    'city' => $user->city,
+                    'pincode' => $user->pincode,
+                    'address' => $user->address,
+                    'reference' => $user->reference,
+                    'company_type' => $user->company_type,
+                    'categories' => $categoryNames,
+                ];
+            });
+
         return response()->json($users);
     }
 
@@ -491,6 +502,27 @@ class DataController extends Controller
         $template = email::find($request->id);
         return response()->json([
             'message' => $template->message ?? ''
+        ]);
+    }
+
+    public function mailHistory(Request $request)
+    {
+        $mail_queues = Mail_Queue::where('is_sent', 1)
+            ->where('users_email', $request->email)
+            ->orderBy('created_at', 'desc')
+            ->limit(10)
+            ->get();
+
+        $emails = $mail_queues->map(function ($mail) {
+            return [
+                'subject' => $mail->subject,
+                'mail_body' => $mail->mail_body,
+                'mail_sent_at' => $mail->mail_sent_at ? $mail->mail_sent_at->format('d-m-y h:i:s A') : null,
+            ];
+        });
+
+        return response()->json([
+            'email' => $emails,
         ]);
     }
 }

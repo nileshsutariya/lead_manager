@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('mail_queue', function (Blueprint $table) {
             $table->id();
-            $table->json('users_email');
-            $table->string('mail_body');
+            $table->string('users_email');
+            $table->longText('mail_body');
             $table->text('subject');
             $table->json('attachment_ids');
             $table->string('country');

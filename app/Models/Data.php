@@ -22,6 +22,7 @@ class Data extends Model
         'company_name',
         'reference',
         'company_type',
+        'categories',
         'status',
         'is_subscribed'
     ];
@@ -29,5 +30,10 @@ class Data extends Model
     public function company()
     {
         return $this->belongsTo(Company_Detail::class, 'company_type');
+    }
+
+    public function category()
+    {
+        return $this->belongsToMany(Category::class, 'categories');
     }
 }

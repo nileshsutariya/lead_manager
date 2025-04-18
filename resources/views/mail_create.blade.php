@@ -3,8 +3,11 @@
 <section class="content-header">
     <div class="container-fluid">
         <div class="row mt-1">
-            <div class="col-md-12 text-center text-md-left">
+            <div class="col-md-4 text-center text-md-left header">
                 <h1>Mail Create</h1>
+            </div>
+            <div class="col-md-8">
+                <div id="alert-placeholder"></div>
             </div>
         </div>
 
@@ -15,15 +18,14 @@
                         <form id="userForm" method="POST" action="{{ route('create.mail.store') }}"
                             enctype="multipart/form-data">
                             @csrf
-                            <div class="mb-3 position-relative">
-                                <label for="user_search">Search User</label>
-                                <textarea id="user_search" name="user_search" placeholder="Search..." style="width: 100px"></textarea>
-                                <input type="hidden" id="user_search_data" name="user_search_data">
-                                <div id="search_results"
-                                    class="list-group position-absolute w-100 mt-1 bg-white border shadow"
-                                    style="z-index: 1000; display: none;"></div>
-                                @error('user_search')
-                                    <div class="text-danger">{{ $message }}</div>
+                            <div class="form-group">
+                                <label>Search User</label>
+                                <select class="form-control select2" style="width: 100%;" id="userSearch"
+                                    value="" name="search_user">
+                                    <option value="">Select a User</option>
+                                </select>
+                                @error('search_user')
+                                    <div class="text-danger">{{$message}}</div>
                                 @enderror
                             </div>
 
@@ -46,7 +48,7 @@
                                     </div>
 
                                     <div class="col-md-6 mb-3">
-                                        <label>Company</label>
+                                        <label>Company Name</label>
                                         <input type="text" class="form-control" id="company_name"
                                             name="company_name">
                                     </div>
@@ -111,15 +113,14 @@
 
                                 <div class="text-right">
                                     <button type="button" id="submitBtn" class="btn btn-primary">Submit</button>
-                                    <button type="button" id="updateBtn"
-                                        class="btn btn-success d-none">Update</button>
+                                    <button type="button" id="updateBtn" class="btn btn-success d-none">Update</button>
                                 </div>
                             </div>
 
                             <div class="mb-3 mt-4">
                                 <label for="mail_template">Mail Template</label>
-                                <select class="form-control select2" id="mail_template" name="mail_template"
-                                    style="width: 100%;">
+                                <select class="form-control select2 select2customize" id="mail_template"
+                                    name="mail_template" style="width: 100%;">
                                     <option value="">Select a Mail Template</option>
                                     @foreach ($emails as $id => $name)
                                         <option value="{{ $id }}">{{ $name }}</option>
@@ -135,9 +136,9 @@
                                     <label for="mail_subject">Subject</label>
                                     <input type="text" class="form-control" id="mail_subject"
                                         name="mail_subject">
-                                    @error('mail_subject')
+                                    {{-- @error('mail_subject')
                                         <div class="text-danger">{{ $message }}</div>
-                                    @enderror
+                                    @enderror --}}
                                 </div>
 
                                 <div class="mb-3">
@@ -173,37 +174,12 @@
                             <table id="example1" class="table table-bordered table-responsive">
                                 <thead>
                                     <tr>
-                                        <th>No.</th>
-                                        {{-- <th>Mail Template</th> --}}
-                                        <th>Categories</th>
-                                        <th>Reference</th>
-                                        <th>Mail_sent_at</th>
+                                        <th style="width: 20%">Mail_sent_at</th>
+                                        <th class="text-center">Subject</th>
+                                        <th></th>
                                     </tr>
                                 </thead>
-                                <tbody>
-                                    {{-- @php
-                                        $i = 1;
-                                    @endphp
-                                    @if (isset($datas))
-                                        @foreach ($datas as $data)
-                                            <tr>
-                                                <td>{{ $i }}</td>
-                                                <td>{{ $data->name }}</td>
-                                                <td>{{ $data->phone_no }}</td>
-                                                <td>{{ $data->email }}</td>
-                                                <td>{{ $data->address }}</td>
-                                                <td>{{ $data->country }}</td>
-                                            </tr>
-                                            @php
-                                                $i++;
-                                            @endphp
-                                        @endforeach
-                                    @endif --}}
-                                </tbody>
                             </table>
-                            {{-- <div id="pagination-links">
-                                {{ $datas->links('pagination::bootstrap-5') }}
-                            </div> --}}
                         </div>
                     </div>
                 </div>
@@ -213,321 +189,15 @@
 
 <script>
     $(document).ready(function() {
+        $('.data').hide();
 
-        // $('.data').hide();
-
-        let userSearchInput = document.querySelector("#user_search");
-        let tagify = new Tagify(userSearchInput, {
-            maxTags: 10,
-            dropdown: {
-                enabled: 3,
-                maxItems: 10
-            }
-        });
-
-        tagify.on("input", function(e) {
-            let query = e.detail.value.toLowerCase();
-
-            if (query.length > 2) {
-                $.ajax({
-                    url: "{{ route('users.search') }}",
-                    type: "GET",
-                    data: {
-                        query
-                    },
-                    success: function(response) {
-                        const whitelist = [];
-                        const selectedUserIds = new Set(tagify.value.map(item => String(item
-                            .id)));
-                        console.log('Selected User IDs:', selectedUserIds);
-
-                        response.forEach(user => {
-                            if (selectedUserIds.has(String(user.id))) {
-                                return;
-                            }
-
-                            const fields = [{
-                                    label: 'name',
-                                    value: user.name
-                                },
-                                {
-                                    label: 'email',
-                                    value: user.email
-                                },
-                                {
-                                    label: 'phone',
-                                    value: user.phone_no
-                                },
-                                {
-                                    label: 'company_name',
-                                    value: user.company_name
-                                }
-                            ];
-
-                            fields.forEach(field => {
-                                const lowerValue = field.value
-                                    ?.toLowerCase();
-                                if (lowerValue && lowerValue.includes(
-                                        query)) {
-                                    whitelist.push({
-                                        value: field.value,
-                                        field_type: field.label,
-                                        id: user.id,
-                                        email: user.email,
-                                        name: user.name,
-                                        phone: user.phone_no,
-                                        company_name: user
-                                            .company_name,
-                                        company_type: user
-                                            .company_type,
-                                        country: user.country,
-                                        state: user.state,
-                                        city: user.city,
-                                        categories: user
-                                            .category_names,
-                                        pincode: user.pincode,
-                                        address: user.address,
-                                        reference: user.reference
-                                    });
-                                }
-                            });
-                        });
-
-                        tagify.settings.whitelist = whitelist;
-
-                        if (whitelist.length > 0 && !tagify.dropdown.visible) {
-                            tagify.dropdown.show();
-                        }
-                    }
-                });
-            }
-        });
-
-        tagify.on("add", function(e) {
-            let user = e.detail.data;
-
-            if (user.id) {
-                populateUserFields(user);
-            } else {
-                resetUserFields();
-            }
-
-            console.log('Item selected:', user);
-            tagify.input.value = '';
-            tagify.settings.whitelist = tagify.settings.whitelist.filter(item => item.id !== user.id);
-            tagify.dropdown.hide();
-
-            $("#user_details").show();
-        });
-
-
-        tagify.on("remove", function(e) {
-            console.log('Item removed:', e.detail.data);
-            tagify.dropdown.show();
-            let remainingUsers = tagify.value;
-
-            if (remainingUsers.length > 0) {
-                let latestUser = remainingUsers[remainingUsers.length - 1];
-                populateUserFields(latestUser);
-            } else {
-                $("#user_details").hide();
-            }
-        });
-
-
-        function populateUserFields(user) {
-            $("#user_id").val(user.id || '');
-            $("#name").val(user.name || '');
-            $("#email").val(user.email || '');
-            $("#phone_no").val(user.phone || '');
-            $("#company_name").val(user.company_name || '');
-            $("#country").val(user.country || '');
-            $("#state").val(user.state || '');
-            $("#city").val(user.city || '');
-            $("#pincode").val(user.pincode || '');
-            $("#address").val(user.address || '');
-            $("#reference").val(user.reference || '');
-
-            $("#categories").val([]).trigger("change");
-            let selectedCategoryIds = [];
-            $("#categories option").each(function() {
-                if (user.categories && user.categories.includes($(this).text().trim())) {
-                    selectedCategoryIds.push($(this).val());
-                }
-            });
-            $("#categories").val(selectedCategoryIds).trigger("change");
-
-            let companyTypeVal = null;
-            $("#company_type option").each(function() {
-                if ($(this).text() === (user.company_type || "")) {
-                    companyTypeVal = $(this).val();
-                }
-            });
-            $("#company_type").val(companyTypeVal).trigger("change");
-
-            $("#user_details").show();
-            $("#updateBtn").removeClass('d-none');
-            $("#submitBtn").addClass('d-none');
-        }
-
-        function resetUserFields() {
-            $("#user_id").val('');
-            $("#name").val('');
-            $("#email").val('');
-            $("#phone_no").val('');
-            $("#company_name").val('');
-            $("#company_type").val('').trigger("change");
-            $("#country").val('');
-            $("#state").val('');
-            $("#city").val('');
-            $("#categories").val([]).trigger("change");
-            $("#pincode").val('');
-            $("#address").val('');
-            $("#reference").val('');
-
-            $("#user_details").show();
-            $("#updateBtn").addClass('d-none');
-            $("#submitBtn").removeClass('d-none');
-        }
-
-        $("#submitBtn").on("click", function(e) {
-            e.preventDefault();
-            $(".text-danger.dynamic-error").remove();
-
-            let country = $("#country").val().trim();
-            let email = $("#email").val().trim();
-            let phone = $("#phone_no").val().trim();
-            let companyName = $("#company_name").val().trim();
-            let name = $("#name").val().trim();
-
-            if (!email && !phone && !companyName && !name) {
-                const errorMsg =
-                    '<div class="text-danger dynamic-error">name || email || phone || company_name one of these fields is required</div>';
-
-                $("#email").after(errorMsg);
-                $("#phone_no").after(errorMsg);
-                $("#company_name").after(errorMsg);
-                $("#name").closest('.form-group, .mb-3').append(errorMsg);
-                return;
-            }
-
-            if (!country) {
-                if (!$("#country").siblings(".text-danger").length) {
-                    $("#country").after(
-                        '<div class="text-danger">The country field is required.</div>');
-                }
-                return;
-            } else {
-                $("#country").siblings(".text-danger").remove();
-            }
-
-            let form = document.getElementById('userForm');
-            let formData = new FormData(form);
-
-            $.ajax({
-                url: "{{ route('data.store') }}",
-                type: "POST",
-                data: formData,
-                processData: false,
-                contentType: false,
-                success: function(response) {
-                    window.location.href = "{{ route('mail.create') }}";
-                },
-                error: function(xhr) {
-                    if (xhr.status === 422) {
-                        let errors = xhr.responseJSON.errors;
-                        $(".text-danger").remove();
-
-                        $.each(errors, function(key, value) {
-                            let input = $(`[name="${key}"]`);
-                            input.siblings(".text-danger").remove();
-                            input.after(
-                                `<div class="text-danger">${value[0]}</div>`);
-                        });
-
-                        $("#user_details").show();
-                    } else {
-                        alert("Something went wrong.");
-                        console.log(xhr.responseText);
-                    }
-                }
-            });
-        });
-
-        $("#updateBtn").on("click", function(e) {
-            e.preventDefault();
-
-            $("#country").siblings(".text-danger").remove();
-            $(".text-danger.dynamic-error").remove();
-
-            let country = $("#country").val().trim();
-            let email = $("#email").val().trim();
-            let phone = $("#phone_no").val().trim();
-            let companyName = $("#company_name").val().trim();
-            let name = $("#name").val().trim();
-
-            if (!email && !phone && !companyName && !name) {
-                const errorMsg =
-                    '<div class="text-danger dynamic-error">name || email || phone || company_name one of these fields are required</div>';
-                $("#email").after(errorMsg);
-                $("#phone_no").after(errorMsg);
-                $("#company_name").after(errorMsg);
-                $("#name").closest('.form-group, .mb-3').append(errorMsg);
-                return;
-            }
-
-            if (!country) {
-                $("#country").after(
-                    '<div class="text-danger dynamic-error">The country field is required.</div>'
-                );
-                return;
-            }
-
-            let userId = $("#user_id").val();
-            console.log('User ID:', userId);
-            let updateUrl = "{{ route('data.update', ':id') }}".replace(':id', userId);
-            let formData = new FormData(document.getElementById("userForm"));
-
-            $.ajax({
-                url: updateUrl,
-                method: "POST",
-                data: formData,
-                processData: false,
-                contentType: false,
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr("content"),
-                },
-                success: function(response) {
-                    $("#user_details").show();
-                },
-                error: function(xhr) {
-                    console.log(xhr.responseText);
-                },
-            });
-        });
-
-        $("#email, #phone_no, #company_name, #name").on("input change", function() {
-            let email = $("#email").val().trim();
-            let phone = $("#phone_no").val().trim();
-            let companyName = $("#company_name").val().trim();
-            let name = $("#name").val().trim();
-
-            if (email || phone || companyName || name) {
-                $(".text-danger.dynamic-error").remove();
-            }
-        });
-
-
-    });
-
-    $(document).ready(function() {
         var counter = 0;
 
         $('#add-attachments-btn').on('click', function() {
             counter++;
 
             var newFileInput = `
-         <div class="file-input-wrapper" id="file-input-wrapper-${counter}" style="position: relative; margin-top: 10px;">
+            <div class="file-input-wrapper" id="file-input-wrapper-${counter}" style="position: relative; margin-top: 10px;">
                 <input type="file" class="form-control" name="attachments[]" id="attachments-${counter}" multiple>
                 <button type="button" class="btn btn-danger remove-btn" data-id="${counter}" 
                     style="position: absolute; top: 5px; right: 5px; padding: 2px 5px; font-size: 18px; 
@@ -541,6 +211,266 @@
         $(document).on('click', '.remove-btn', function() {
             var id = $(this).data('id');
             $('#file-input-wrapper-' + id).remove();
+        });
+    });
+
+$(document).ready(function () {
+    $('#userSearch').on('select2:open', function () {
+    const observer = new MutationObserver(function () {
+        const $input = $('.select2-container--open .select2-search input');
+        if ($input.length) {
+            observer.disconnect();
+
+            const $resultsList = $('.select2-results__options');
+            $resultsList.empty(); 
+
+            const $addItem = $(`
+                <li class="select2-results__option new-user"
+                    role="option"
+                    style="background-color: #e6ffe6; padding: 10px 12px; border-radius: 6px; margin: 6px 0; text-align: center; cursor: pointer; font-weight: bold; color: #007b00;">
+                    + Add new user
+                </li>
+            `);
+
+            $addItem.on('click', function () {
+                $('#user_details input').val('');
+                $('#user_details select').val('').trigger('change');
+                $('#categories').val(null).trigger('change');
+                $('#company_type').val(null).trigger('change');
+
+                $('#user_details').slideDown();
+                $('.data').hide();
+                $('#submitBtn').removeClass('d-none');
+                $('#updateBtn').addClass('d-none');
+
+                const $select = $('.select2-container--open').prev('select');
+                $select.val(null).trigger('change').select2('close');
+            });
+
+            $resultsList.append($addItem); 
+
+            $input.on('input', function () {
+                const searchVal = $(this).val().trim();
+
+                $resultsList.empty();
+
+                if (searchVal.length < 1) {
+                    $resultsList.append($addItem); 
+                    return;
+                }
+
+                $.ajax({
+                    url: '/users/search',
+                    dataType: 'json',
+                    data: { q: searchVal },
+                    success: function (data) {
+                        $resultsList.empty();
+
+                        $('#user_details input').val('');
+                        $('#user_details select').val('').trigger('change');
+                        $('#user_details').slideUp();
+                        $('#submitBtn').addClass('d-none');
+                        $('#updateBtn').addClass('d-none');
+
+                        if (data.length === 0) {
+                            $resultsList.append($addItem);
+                            return;
+                        }
+
+                        data.forEach(user => {
+                            const displayHtml = `
+                                <div style="font-size: 14px; color: #333;">
+                                    <div class="row">
+                                        <div class="col-md-6"><strong>${user.name ?? ''}</strong></div>
+                                        <div class="col-md-6"><span>${user.phone_no ?? ''}</span></div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6"><span>${user.email ?? ''}</span></div>
+                                        <div class="col-md-6"><span>${user.company_name ?? ''}</span></div>
+                                    </div>
+                                </div>`;
+
+                            const $item = $(`
+                                <li class="select2-results__option select2-results__option--selectable custom-user-item"
+                                    role="option"
+                                    data-user-id="${user.id}"
+                                    style="background-color: #f4fbff; padding: 10px 12px; border-radius: 6px; margin: 6px 0; transition: background-color 0.3s; cursor: pointer;">
+                                    ${displayHtml}
+                                </li>
+                            `);
+
+                            $item.on('click', function () {
+                                $("#name").val(user.name || '');
+                                $("#email").val(user.email || '');
+                                $("#phone_no").val(user.phone_no || '');
+                                $("#company_name").val(user.company_name || '');
+                                $("#country").val(user.country || '');
+                                $("#state").val(user.state || '');
+                                $("#city").val(user.city || '');
+                                $("#pincode").val(user.pincode || '');
+                                $("#address").val(user.address || '');
+                                $("#reference").val(user.reference || '');
+
+                                if (user.categories && Array.isArray(user.categories)) {
+                                    const selectedCategoryIds = [];
+                                    $("#categories option").each(function () {
+                                        const optionText = $(this).text().trim();
+                                        if (user.categories.includes(optionText)) {
+                                            selectedCategoryIds.push($(this).val());
+                                        }
+                                    });
+                                    $("#categories").val(selectedCategoryIds).trigger("change");
+                                }
+
+                                let companyTypeVal = null;
+                                if (user.company_type) {
+                                    $("#company_type option").each(function () {
+                                        if ($(this).val() == user.company_type) {
+                                            companyTypeVal = $(this).val();
+                                        }
+                                    });
+                                }
+                                $("#company_type").val(companyTypeVal).trigger("change");
+
+                                $('#user_details').slideDown();
+                                $('#submitBtn').addClass('d-none');
+                                $('#updateBtn').removeClass('d-none').data('user-id', user.id);
+
+                                const selectedText = user.name || user.email || user.phone_no || user.company_name;
+                                const $select = $('.select2-container--open').prev('select');
+
+                                if ($select.find(`option[value="${user.id}"]`).length === 0) {
+                                    const newOption = new Option(selectedText, user.id, true);
+                                    $select.append(newOption);
+                                    $select.select2('destroy').select2();
+                                }
+
+                                $select.val(user.id).trigger('change.select2'); 
+                                $select.select2('close');
+
+                                const email = $("#email").val();
+                                if (email) {
+                                    $.ajax({
+                                        url: '{{ route('user.mail.history') }}',
+                                        type: 'GET',
+                                        data: { email: email },
+                                        success: function (response) {
+                                            let tableBody = '';
+                                            if (response.email.length > 0) {
+                                                response.email.forEach(mail => {
+                                                    tableBody += `
+                                                        <tr>
+                                                            <td>${mail.mail_sent_at}</td>
+                                                           <td class="text-center"><span>${mail.subject}</span></td>
+                                                            <td><i class="fa fa-eye show_message" style="color: #007bff;"></i></td>
+                                                        </tr>
+                                                        <tr class="message-row" style="display: none;">
+                                                            <td colspan="3">
+                                                                <div class="message-content" style="margin-top: 8px; padding: 10px; background: #f9f9f9; border: 1px solid #ccc; border-radius: 4px;">
+                                                                    ${mail.mail_body}
+                                                                </div>
+                                                            </td>
+                                                        </tr>`;
+                                                });
+                                                $('#example1 tbody').html(tableBody);
+                                                $('.data').slideDown();
+                                            } else {
+                                                $('.data').hide();
+                                            }
+                                        }
+                                    });
+                                }
+                            });
+
+                            $resultsList.append($item);
+                        });
+                    },
+                    error: function (xhr) {
+                        console.error(xhr.responseText);
+                    }
+                });
+            });
+        }
+    });
+
+    observer.observe(document.body, {
+        childList: true,
+        subtree: true
+    });
+});
+});
+
+$("#submitBtn").on("click", function(e) {
+    e.preventDefault();
+
+    let form = document.getElementById('userForm');
+    let formData = new FormData(form);
+
+    $.ajax({
+        url: "{{ route('data.store') }}",
+        type: "POST",
+        data: formData,
+        processData: false,
+        contentType: false,
+        success: function(response) {
+            $('#alert-placeholder').html(`
+                <div class="alert alert-primary alert-dismissible fade show" role="alert" id="primary-alert">
+                    <i class="fa fa-check-circle me-1"></i>
+                    Users details saved successfully!
+                </div>
+            `);
+
+            setTimeout(() => {
+                $('#primary-alert').fadeOut();
+            }, 2500);
+            $('#user_details').hide();
+        },
+        error: function(xhr) {
+            console.log(xhr.responseText);
+        }
+    });
+});
+
+    const updateUrlTemplate = "{{ route('data.update', ['id' => '__ID__']) }}";
+    $("#updateBtn").on("click", function(e) {
+        e.preventDefault();
+
+        let userId = $(this).data('user-id');
+        let updateUrl = updateUrlTemplate.replace('__ID__', userId);
+        console.log(updateUrl);
+
+        let formData = new FormData(document.getElementById("userForm"));
+
+        $.ajax({
+            url: updateUrl,
+            method: "POST",
+            data: formData,
+            processData: false,
+            contentType: false,
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr("content"),
+            },
+            success: function(response) {
+                $('#alert-placeholder').html(`
+                <div class="alert alert-success alert-dismissible fade show" role="alert" id="success-alert">
+                    <i class="fa fa-check-circle me-1"></i>
+                    Users details Updated successfully!
+                </div>
+            `);
+
+            setTimeout(() => {
+                $('#success-alert').fadeOut();
+            }, 2500);
+            $("#user_details").show();
+
+            $('html, body').animate({
+                scrollTop: $(".header").offset().top - 100 
+            }, 500); 
+
+            },
+            error: function(xhr) {
+                console.log("Update error:", xhr.responseText);
+            },
         });
     });
 </script>
@@ -574,15 +504,7 @@
                         if (response) {
                             $('#mail_subject').val(response.subject);
                             $('#mail_message').summernote('code', response.message);
-                            $('#mail_template_details').show();
-
-                            // let subject = $('#mail_subject').val().trim();
-                            // if (!subject) {
-                            //     const errorMsg =
-                            //         '<div class="text-danger dynamic-error">Subject field is required</div>';
-                            //     $('#mail_subject').after(errorMsg);
-                            // }
-
+                            $('#mail_template_details').slideDown();
                         }
                     }
                 });
@@ -592,20 +514,30 @@
                 $('#mail_message').summernote('code', '');
             }
         });
+
+        $(document).on('click', '.show_message', function() {
+            const $mainRow = $(this).closest('tr');
+            const $messageRow = $mainRow.next('.message-row');
+            $messageRow.toggle();
+        });
+
     });
 </script>
 
 <script>
     $(function() {
         $('.select2').select2()
-
         $('.select2bs4').select2({
-            theme: 'bootstrap5'
-        })
-    });
-</script>
+            theme: 'bootstrap4'
+        });
 
-<script>
+        $('#mail_template').select2({
+            placeholder: "Select a Mail Template",
+            allowClear: false
+        });
+
+    })
+
     $(document).ready(function() {
         $("#example1").DataTable({
             "responsive": false,
@@ -613,7 +545,7 @@
             "autoWidth": false,
             "paging": false,
             "searching": false,
-            "ordering": true,
+            "ordering": false,
             "info": false,
             "columnDefs": [{
                     "width": "10%",
@@ -636,29 +568,5 @@
         padding: 6px 12px;
         border: 1px solid #ced4da;
         border-radius: 0.25rem;
-    }
-
-    .select2-container--default .select2-selection--multiple {
-        height: 40px !important;
-        padding: 2px 4px;
-        border: 1px solid #ced4da;
-        border-radius: 0.25rem;
-    }
-
-    .tagify-textarea {
-        width: 100%;
-        font-size: 1rem;
-        line-height: 1.5;
-        border: 1px solid #ced4da;
-        box-sizing: border-box;
-        resize: vertical;
-    }
-
-    .tagify {
-        width: 100%;
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        box-sizing: border-box;
     }
 </style>
