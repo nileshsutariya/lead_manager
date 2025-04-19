@@ -56,7 +56,7 @@
                     @enderror
                 </div>
 
-                <div class="mb-3">
+                <div class="mb-3 ml-4">
                     <input type="checkbox" class="form-check-input" id="status" name="status" value="1"
                         {{ old('status', $email->status ?? 0) == 1 ? 'checked' : '' }}>
                     <label class="form-check-label ml-1" for="status" style="font-size: 18px;">Is Active</label>
@@ -95,13 +95,11 @@
             'font-size': '16px',
             'padding': '5px 12px'
         });
-
     });
 
     let existingContent = $('#message').text();
     $('#message').summernote('code', existingContent);
 </script>
-
 
 @include('layouts.footer')
 
