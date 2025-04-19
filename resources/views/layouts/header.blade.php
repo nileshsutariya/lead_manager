@@ -67,25 +67,12 @@
 
             <!-- Right navbar links -->
             <ul class="navbar-nav ml-auto">
-                <!-- Profile Dropdown -->
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="profileDropdown" role="button"
-                        data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="font-size: 20px">
-                        {{-- @if (Auth::guard('admin')->check())
-                            {{ Auth::guard('admin')->user()->name }}
-                        @endif --}}
-                    </a>
-                    <div class="dropdown-menu" aria-labelledby="profileDropdown">
-                        <!-- Add profile links or other options here -->
-                        <a class="dropdown-item" href="">My Profile</a>
-                        <div class="dropdown-divider"></div>
-                        <a class="dropdown-item" href=""
-                            onclick="event.preventDefault(); document.getElementById('logout-form').submit();">Logout</a>
-                    </div>
-                </li>
+                
+                <button class=" btn btn-danger btn-md" href=""
+                onclick="event.preventDefault(); document.getElementById('logout-form').submit();">Logout</button>
 
                 <!-- Logout Form (hidden) -->
-                <form id="logout-form" action="" method="POST" style="display: none;">
+                <form id="logout-form" action="{{route('logout')}}" method="POST" style="display: none;">
                     @csrf
                 </form>
             </ul>

@@ -11,6 +11,7 @@ use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use App\Models\Company_Detail;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -524,5 +525,40 @@ class DataController extends Controller
         return response()->json([
             'email' => $emails,
         ]);
+    }
+
+    public function login()
+    {
+        return view('login');
+    }
+
+    public function auth(Request $request)
+    {
+        $request->validate([
+            'email' => 'required',
+            'password' => 'required'
+        ]);
+
+        $credentials = $request->only('email', 'password');
+
+        if (Auth::guard('admin')->attempt($credentials)) {
+            return redirect()->route('mail.create');
+        } 
+        else {
+            return redirect()->back()->withErrors(['password' => 'Invalid phone number or password']);
+        }
+        return redirect()->route('login.view')->withErrors(['email' => 'Invalid phone number or password']);
+    }
+
+    public function logout(Request $request)
+    {
+
+        // dd($request->all());
+        if (Auth::guard('admin')->check()) {
+            Auth::guard('admin')->logout();
+        } 
+
+
+        return redirect()->route('login.view');
     }
 }
