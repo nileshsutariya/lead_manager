@@ -264,6 +264,11 @@ class DataController extends Controller
     public function mail_destroy(string $id)
     {
         $email = Email::with('attachment')->find($id);
+
+        if (!$email) {
+            return redirect()->route('mail.table')->with('error', 'Email not found or already deleted.');
+        }
+
         $attachment = $email->attachment;
 
         $email->delete();
@@ -356,10 +361,16 @@ class DataController extends Controller
     public function category()
     {
         $mail_template = Email::pluck('name', 'id');
+<<<<<<< HEAD
         $categories = Category::leftjoin('emails', 'emails.category_id', '=', 'categories.mail_templet')
         ->select('categories.*', 'emails.name as email') 
         ->get();
         // print_r($categories->toArray());die;
+=======
+        $categories = Category::Leftjoin('emails', 'emails.id', '=', 'categories.mail_templet')
+            ->select('categories.*', 'emails.name as mail_templet')->get();
+        // dd($categories);
+>>>>>>> fa14f3c3ddca0199788cb2c1a4ab5001a9ad7ce7
         return view('category', compact('mail_template', 'categories'));
     }
 
@@ -609,8 +620,7 @@ class DataController extends Controller
 
         if (Auth::guard('admin')->attempt($credentials)) {
             return redirect()->route('mail.create');
-        } 
-        else {
+        } else {
             return redirect()->back()->withErrors(['password' => 'Invalid phone number or password']);
         }
         return redirect()->route('login.view')->withErrors(['email' => 'Invalid phone number or password']);
@@ -622,7 +632,7 @@ class DataController extends Controller
         // dd($request->all());
         if (Auth::guard('admin')->check()) {
             Auth::guard('admin')->logout();
-        } 
+        }
 
 
         return redirect()->route('login.view');

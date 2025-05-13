@@ -11,8 +11,8 @@ class Category extends Model
         'mail_templet'
     ];
 
-    public function emails()
-    {
-        return $this->hasMany(Email::class);
-    }
+    // public function emails()
+    // {
+    //     return $this->hasMany(Email::class);
+    // }
 }
