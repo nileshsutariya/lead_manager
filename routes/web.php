@@ -27,13 +27,20 @@ Route::middleware(['admin'])->group(function () {
 
     Route::get('/category', [DataController::class, 'category'])->name('category');
     Route::post('/category_store', [DataController::class, 'store_category'])->name('category.store');
+    Route::get('/category/delete/{id}', [DataController::class, 'delete'])->name('category.delete');
+    Route::get('/category/edit/{id}', [DataController::class, 'edit'])->name('category.edit');
+    Route::post('/category/update/{id}', [DataController::class, 'update'])->name('category.update');
+    
 
     Route::get('/mail_create', [DataController::class, 'mail_create'])->name('mail.create');
     Route::post('/mail_create/store', [DataController::class, 'create_mail_store'])->name('create.mail.store');
 
     Route::get('/get_reference', [DataController::class, 'get_reference'])->name('get.reference');
     Route::get('/company_type', [DataController::class, 'company_type'])->name('company.type');
-    Route::Post('/company_type/store', [DataController::class, 'store_company'])->name('store.company');
+    Route::post('/company_type/store', [DataController::class, 'store_company'])->name('store.company');
+    Route::get('/company_type/delete/{id}' ,[DataController::class, 'company_delete'])->name('company.delete');
+    Route::get('/company_type/edit/{id}', [DataController::class, 'company_edit'])->name('company.edit');
+    Route::post('/company_type/update/{id}', [DataController::class, 'company_update'])->name('company.update');
 
     Route::get('/users/search', [DataController::class, 'search'])->name('users.search');
     Route::get('/mail-templates/show', [DataController::class, 'show'])->name('mail.templates.show');
