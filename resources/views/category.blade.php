@@ -40,7 +40,7 @@
                 <div class="card-body">
                     <div class="table-responsive">
                         <table id="example1" class="table table-bordered table-responsive">
-                            <thead >
+                            <thead>
                                 <tr>
                                     <th>No.</th>
                                     <th>Name</th>
@@ -49,23 +49,15 @@
                             </thead>
                             <tbody>
                                 @if (isset($categories))
-                                    @if ($categories->count())
-                                        @foreach ($categories as $key => $category)
-                                            <tr>
-                                                <td>{{ $key + 1 }} </td>
-                                                <td>{{ $category->name }}</td>
-                                                <td>
-                                                    @if ($category->emails->count())
-                                                        @foreach ($category->emails as $email)
-                                                            {{ $email->name }}<br>  
-                                                        @endforeach
-                                                    @else
-                                                        N/A
-                                                    @endif
-                                                </td>
-                                            </tr>
-                                        @endforeach
-                                    @endif
+                                    @foreach ($categories as $key => $category)
+                                        <tr>
+                                            <td>{{ $key + 1 }} </td>
+                                            <td>{{ $category->name }}</td>
+                                            <td>
+                                                {{ $category->mail_templet }}
+                                            </td>
+                                        </tr>
+                                    @endforeach
                                 @endif
                             </tbody>
                         </table>

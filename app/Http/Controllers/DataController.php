@@ -265,15 +265,16 @@ class DataController extends Controller
     {
         $email = Email::with('attachment')->find($id);
         $attachment = $email->attachment;
-
+        
         $email->delete();
-
+        
         if ($attachment) {
             Storage::disk('public')->delete($attachment->path);
             $attachment->delete();
         }
-
-        $emails = Email::with('attachment')->get();
+        
+          $emails = Email::with('attachment')->paginate(25);
+      
 
         return view('mail_table', compact('emails'));
     }
@@ -356,7 +357,9 @@ class DataController extends Controller
     public function category()
     {
         $mail_template = Email::pluck('name', 'id');
-        $categories = Category::with('emails')->get();
+        $categories = Category::Leftjoin('emails','emails.id','=','categories.mail_templet')
+        ->select('categories.*','emails.name as mail_templet')->get();
+        // dd($categories);
         return view('category', compact('mail_template', 'categories'));
     }
 
