@@ -366,9 +366,16 @@ class DataController extends Controller
     public function category()
     {
         $mail_template = Email::pluck('name', 'id');
+<<<<<<< HEAD
+        $categories = Category::leftjoin('emails', 'emails.category_id', '=', 'categories.mail_templet')
+        ->select('categories.*', 'emails.name as email') 
+        ->get();
+        // print_r($categories->toArray());die;
+=======
         $categories = Category::Leftjoin('emails', 'emails.id', '=', 'categories.mail_templet')
             ->select('categories.*', 'emails.name as mail_templet')->get();
         // dd($categories);
+>>>>>>> fa14f3c3ddca0199788cb2c1a4ab5001a9ad7ce7
         return view('category', compact('mail_template', 'categories'));
     }
 
@@ -386,6 +393,39 @@ class DataController extends Controller
         $category->save();
 
         return redirect()->back();
+    }
+
+    public function delete($id)
+    {
+        $category = Category::find($id);
+        $category->delete();
+        return redirect()->route('category',compact('category'));
+
+    }
+
+    public function edit($id)
+    {
+        $mail_template = Email::pluck('name', 'id');
+        $category = Category::find($id);
+        return view('category',compact('category','mail_template'));
+
+    }
+
+    public function update($id, Request $request)
+    {
+        $request->validate([
+            'name' => 'required',
+        ]);
+
+        $category = Category::find($id);
+        $category->name = $request['name'];
+        $category->mail_templet = ['mail_templet'];
+        $category->save();
+
+        return redirect()->route('category');
+        
+
+
     }
 
     public function mail_create()
@@ -472,6 +512,36 @@ class DataController extends Controller
         $company->save();
 
         return redirect()->back();
+    }
+
+    public function company_delete($id)
+    {
+        $company = Company_Detail::find($id);
+        $company->delete();
+        return redirect()->route('company.type',compact('company'));
+
+    }
+
+    public function company_edit($id)
+    {
+        $company = Company_Detail::find($id);
+        return view('company_type',compact('company'));
+
+
+    }
+
+    public function company_update($id,Request $request)
+    {
+        $request->validate([
+            'name' => 'required'
+        ]);
+
+        $company = Company_Detail::find($id);
+        $company->name = $request['name'];
+        $company->save();
+        return redirect()->route('company.type');
+
+
     }
 
     public function search(Request $request)
