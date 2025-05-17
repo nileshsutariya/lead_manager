@@ -66,9 +66,14 @@ class DataController extends Controller
         $datas = Data::paginate(25);
 
         foreach ($datas as $data) {
-            $categoryIds = json_decode($data->categories, true);
-            $data->category_names = Category::whereIn('id', $categoryIds)->pluck('name')->toArray();
+            $categoryIds = json_decode($data->categories, true) ?? [];
+            if (is_array($categoryIds) && count($categoryIds)) {
+                $data->category_names = Category::whereIn('id', $categoryIds)->pluck('name')->toArray();
+            } else {
+                $data->category_names = [];
+            }
         }
+
 
         if ($request->ajax()) {
             return response()->json([
